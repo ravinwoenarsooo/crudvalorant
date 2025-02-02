@@ -1,9 +1,8 @@
 package entity
 
-// Ini buat tabel di database buat di migrate.
-type Agent struct {
-	Agent_ID   uint   `json:"id" gorm:"primarykey"`
+type Agents struct {
+	Agent_Id   uint   `json:"id" gorm:"primaryKey"`
 	Agent_Name string `json:"name"`
-	Role_ID    uint   `json:"-"`
-	Role       Roles  `json:"role" gorm:"foreignkey:Role_ID"`
+	Role_Id    int    `json:"role_id"` // Foreign Key
+	Role       Roles  `json:"role" gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 }

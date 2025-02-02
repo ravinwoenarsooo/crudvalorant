@@ -9,7 +9,7 @@ import (
 
 // Ini buat migrate table ke database.
 func RunMigrate() {
-	err := database.DB.AutoMigrate(&entity.Agent{}, &entity.Roles{})
+	err := database.DB.AutoMigrate(&entity.Roles{}, &entity.Agents{})
 	if err != nil {
 		panic(err)
 	} else {

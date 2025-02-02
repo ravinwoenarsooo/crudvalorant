@@ -10,6 +10,7 @@ import (
 func main() {
 	database.ConnectDatabase()
 	migration.RunMigrate()
+	migration.RoleSeed(database.DB)
 	app := fiber.New()
 
 	routers.RouterApp(app)
