@@ -33,7 +33,7 @@ func AgentControllerCreate(c *fiber.Ctx) error {
 		return err
 	}
 
-	//Validasi input user pakai package validator/v10
+	// Validasi input user pakai package validator/v10
 	validate := validator.New()
 	if err := validate.Struct(agent); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -42,21 +42,40 @@ func AgentControllerCreate(c *fiber.Ctx) error {
 		})
 	}
 
-	//Masukin data struct ini ke struct user
+	//Cek apakah roleID ada di database Roles
+	// var role entity.Roles
+	// if err := database.DB.First(&role, agent.Role_Id).Error; err != nil {
+	// 	return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+	// 		"msg": "RoleID not found",
+	// 	})
+	// }
+
+	//Assign data input ke struct userReq
 	newUser := entity.Agent{
-		Name: agent.Name,
-		Role: agent.Role,
+		Agent_Name: agent.Name,
+		Role_ID:    uint(agent.Role_Id),
 	}
+
+	//Bikin user baru
 	if err := database.DB.Create(&newUser).Error; err != nil {
-		//Kalau go-native status(500)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"message": "Failed to create new agent",
+			"msg": "Failed to create new agent",
 		})
 	}
+
+	var CreatedAgent entity.Agent
+	if err := database.DB.Preload("Roles").First(&CreatedAgent, newUser.Agent_ID).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"msg": "Failed to fetch agent data",
+			"err": err.Error(),
+		})
+	}
+
 	return c.JSON(fiber.Map{
-		"message": "Success create new agent",
-		"data":    newUser,
+		"msg":  "Success create new agent",
+		"data": CreatedAgent,
 	})
+
 }
 
 func AgentControllerGetById(c *fiber.Ctx) error {
@@ -72,7 +91,7 @@ func AgentControllerGetById(c *fiber.Ctx) error {
 	}
 
 	//Ngecek apakah id ada di database.
-	if err := database.DB.Where("id = ?", id).First(&agent).Error; err != nil {
+	if err := database.DB.Where("Agent_ID = ?", id).First(&agent).Error; err != nil {
 		c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"message": "Data not found",
 		})
@@ -85,39 +104,39 @@ func AgentControllerGetById(c *fiber.Ctx) error {
 	})
 }
 
-func AgentControllerUpdate(c *fiber.Ctx) error {
-	agent := new(req.AgentReq)
-	if err := c.BodyParser(agent); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"message": "Failed to parse body",
-			"error":   err.Error(),
-		})
-	}
+// func AgentControllerUpdate(c *fiber.Ctx) error {
+// 	agent := new(req.AgentReq)
+// 	if err := c.BodyParser(agent); err != nil {
+// 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+// 			"message": "Failed to parse body",
+// 			"error":   err.Error(),
+// 		})
+// 	}
 
-	validate := validator.New()
-	if err := validate.Struct(agent); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"message": "Body not valid",
-			"error":   err.Error(),
-		})
-	}
+// 	validate := validator.New()
+// 	if err := validate.Struct(agent); err != nil {
+// 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+// 			"message": "Body not valid",
+// 			"error":   err.Error(),
+// 		})
+// 	}
 
-	updatedUser := entity.Agent{
-		Name: agent.Name,
-		Role: agent.Role,
-	}
+// 	updatedUser := entity.Agent{
+// 		Agent_Name: agent.Name,
+// 		Role_ID: agent.Role,
+// 	}
 
-	if err := database.DB.Model(&entity.Agent{}).Where("id = ?", c.Params("id")).Updates(updatedUser).Error; err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"message": "Failed to update agent",
-		})
-	}
+// 	if err := database.DB.Model(&entity.Agent{}).Where("id = ?", c.Params("id")).Updates(updatedUser).Error; err != nil {
+// 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+// 			"message": "Failed to update agent",
+// 		})
+// 	}
 
-	return c.JSON(fiber.Map{
-		"message": "Success update agent",
-		"data":    updatedUser,
-	})
-}
+// 	return c.JSON(fiber.Map{
+// 		"message": "Success update agent",
+// 		"data":    updatedUser,
+// 	})
+// }
 
 func AgentControllerDeleteById(c *fiber.Ctx) error {
 	var agent []entity.Agent
@@ -131,7 +150,7 @@ func AgentControllerDeleteById(c *fiber.Ctx) error {
 		return nil
 	}
 
-	if err := database.DB.Where("id = ?", id).First(&agent).Error; err != nil {
+	if err := database.DB.Where("Agent_ID = ?", id).First(&agent).Error; err != nil {
 		c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"message": "Agent data not found",
 		})
@@ -139,7 +158,7 @@ func AgentControllerDeleteById(c *fiber.Ctx) error {
 	}
 
 	//Ngecek apakah id ada di database.
-	if err := database.DB.Where("id = ?", id).Delete(&agent).Error; err != nil {
+	if err := database.DB.Where("Agent_ID = ?", id).Delete(&agent).Error; err != nil {
 		c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"message": "Delete Agent Failed",
 		})
