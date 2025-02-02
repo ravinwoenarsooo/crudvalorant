@@ -21,6 +21,7 @@ func RoleSeed(db *gorm.DB) error {
 			{Role_Name: "Sentinel"},
 		}
 
+		//Pakai transaction biar kalau ada 1 salah langsung cancel semua
 		if err := db.Transaction(func(tx *gorm.DB) error {
 			if err := tx.Create(&roles).Error; err != nil {
 				return err
