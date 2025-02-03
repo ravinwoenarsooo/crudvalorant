@@ -80,7 +80,7 @@ func AgentControllerCreate(c *fiber.Ctx) error {
 
 func AgentControllerGetById(c *fiber.Ctx) error {
 	var agent []entity.Agents
-	id := c.Params("id")
+	id := c.Query("id")
 
 	//Ngecek id input user ada atau tidak.
 	if id == "" {
