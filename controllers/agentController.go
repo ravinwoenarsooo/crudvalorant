@@ -26,7 +26,7 @@ func AgentControllerShowAll(c *fiber.Ctx) error {
 
 	if err := database.DB.Preload("Role").Find(&agent).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"message": "Failed fetch agent data",
+			"message": "Failed fetch agent role data",
 			"error":   err.Error(),
 		})
 	}
@@ -94,6 +94,7 @@ func AgentControllerGetById(c *fiber.Ctx) error {
 	if err := database.DB.Where("Agent_Id = ?", id).First(&agent).Error; err != nil {
 		c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"message": "Data not found",
+			"error":   err.Error(),
 		})
 		return nil
 	}
@@ -167,5 +168,33 @@ func AgentControllerDeleteById(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "Agent has been deleted",
+	})
+}
+
+func ShowAllAgentByRoles(c *fiber.Ctx) error {
+	var agent []entity.Agents
+	id := c.Query("id")
+
+	err := database.DB.Find(&agent).Error
+	if err != nil {
+		log.Println(err)
+	}
+
+	if len(agent) == 0 {
+		return c.JSON(fiber.Map{
+			"message": "No data on database",
+		})
+	}
+
+	if err := database.DB.Preload("Role").Where("Role_Id = ?", id).Find(&agent).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed fetch agent data",
+			"error":   err.Error(),
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "Success",
+		"data":    agent,
 	})
 }
