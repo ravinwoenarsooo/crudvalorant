@@ -19,6 +19,6 @@ func RouterApp(c *fiber.App) {
 	c.Get("/api/getUserById", controllers.AgentControllerGetById)
 	c.Get("/api/showAllAgentbyRoles", controllers.ShowAllAgentByRoles)
 	c.Post("/api/create", controllers.AgentControllerCreate)
-	c.Put("/api/updateUser/:id", controllers.AgentControllerUpdate)
-	c.Delete("/api/delete/:id", controllers.AgentControllerDeleteById)
+	c.Put("/api/updateUser", controllers.AgentControllerUpdate)
+	c.Delete("/api/delete", controllers.AgentControllerDeleteById)
 }

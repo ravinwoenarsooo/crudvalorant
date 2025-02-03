@@ -91,7 +91,7 @@ func AgentControllerGetById(c *fiber.Ctx) error {
 	}
 
 	//Ngecek apakah id ada di database.
-	if err := database.DB.Where("Agent_Id = ?", id).First(&agent).Error; err != nil {
+	if err := database.DB.Preload("Role").Where("Agent_Id = ?", id).First(&agent).Error; err != nil {
 		c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"message": "Data not found",
 			"error":   err.Error(),
@@ -107,6 +107,7 @@ func AgentControllerGetById(c *fiber.Ctx) error {
 
 func AgentControllerUpdate(c *fiber.Ctx) error {
 	agent := new(req.AgentsReq)
+	id := c.Query("id")
 	if err := c.BodyParser(agent); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"message": "Failed to parse body",
@@ -122,26 +123,42 @@ func AgentControllerUpdate(c *fiber.Ctx) error {
 		})
 	}
 
+	if id == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": "Id is required",
+		})
+	}
+
 	updatedUser := entity.Agents{
 		Agent_Name: agent.Name,
 		Role_Id:    agent.Role,
 	}
 
-	if err := database.DB.Model(&entity.Agents{}).Where("Agent_Id = ?", c.Params("id")).Updates(updatedUser).Error; err != nil {
+	if err := database.DB.Model(&entity.Agents{}).Where("Agent_Id = ?", id).Updates(updatedUser).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"message": "Failed to update agent",
+			"error":   err.Error(),
+		})
+	}
+
+	var result entity.Agents
+
+	if err := database.DB.Preload("Role").Where("Agent_Id = ?", id).First(&result).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to get updated agent",
+			"error":   err.Error(),
 		})
 	}
 
 	return c.JSON(fiber.Map{
 		"message": "Success update agent",
-		"data":    updatedUser,
+		"data":    result,
 	})
 }
 
 func AgentControllerDeleteById(c *fiber.Ctx) error {
 	var agent []entity.Agents
-	id := c.Params("id")
+	id := c.Query("id")
 
 	//Ngecek id input user ada atau tidak.
 	if id == "" {
